@@ -37,6 +37,24 @@ app.post('/buscarNino', async (req, res) => {
         res.status(500).send('Error al buscar niño');
     }
 });
+app.post('/buscarNinoId', async (req, res) => {
+    const { correo_electronico } = req.body;
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('correo_electronico', sql.VarChar, correo_electronico)
+            .query('SELECT id_nino FROM nino WHERE correo_electronico = @correo_electronico');
+
+        if (result.recordset.length > 0) {
+            res.json(result.recordset[0]); // responde con { id_nino: ... }
+        } else {
+            res.status(404).send('Niño no encontrado');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al buscar niño');
+    }
+});
 
 app.put('/actualizarNino', async (req, res) => {
     const { nombre, apellido, edad, correo_electronico } = req.body;
