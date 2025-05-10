@@ -277,6 +277,45 @@ app.post('/nombre-nino', async (req, res) => {
     }
 
 });
+
+//Juegos 
+
+app.post('/insertarSesion', async (req, res) => {
+    const { id_nino, id_juego, tiempo_en_actividad, nivel_actual, puntos_por_juego } = req.body;
+
+    try {
+        const pool = await sql.connect(config);
+        await pool.request()
+            .input('id_nino', sql.Int, id_nino)
+            .input('id_juego', sql.Int, id_juego)
+            .input('tiempo_en_actividad', sql.VarChar, tiempo_en_actividad)
+            .input('nivel_actual', sql.VarChar, nivel_actual)
+            .input('puntos_por_juego', sql.Int, puntos_por_juego)
+            .query(`
+                INSERT INTO sesion_de_juego (
+                    id_nino,
+                    id_juego,
+                    fecha_de_sesion,
+                    tiempo_en_actividad,
+                    nivel_actual,
+                    puntos_por_juego
+                ) VALUES (
+                    @id_nino,
+                    @id_juego,
+                    CAST(GETDATE() AS DATE),
+                    @tiempo_en_actividad,
+                    @nivel_actual,
+                    @puntos_por_juego
+                )
+            `);
+
+        res.send('Sesión registrada');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al insertar sesión');
+    }
+});
+
 // Iniciar el servidor en el puerto 3000
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
