@@ -278,6 +278,38 @@ app.post('/nombre-nino', async (req, res) => {
 
 });
 
+app.post('/mejor-sesion', async (req, res) => {
+    const { correo_electronico } = req.body;
+
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('correo_electronico', sql.VarChar, correo_electronico)
+            .query(`
+                SELECT TOP 1 id_nino, nivel_actual, puntos_por_juego, nombre_juego
+                FROM vista_mejores_sesiones
+                WHERE correo_electronico = @correo_electronico
+                AND rank_puntos = 1
+            `);
+
+        if (result.recordset.length > 0) {
+            const mejor = result.recordset[0];
+            res.json({
+                id_nino: mejor.id_nino,
+                nivel_actual: mejor.nivel_actual,
+                puntos_por_juego: mejor.puntos_por_juego,
+                nombre_juego: mejor.nombre_juego
+            });
+        } else {
+            res.status(404).send('No se encontró mejor sesión para ese correo');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al obtener mejor sesión');
+    }
+});
+
+
 //Juegos 
 
 app.post('/insertarSesion', async (req, res) => {
