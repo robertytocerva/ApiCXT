@@ -275,7 +275,28 @@ app.post('/nombre-nino', async (req, res) => {
         console.error(err);
         res.status(500).send('Error al obtener niño');
     }
+});
 
+app.post('/discapacidad', async (req, res) => {
+    const { correo_electronico } = req.body;
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('correo_electronico', sql.VarChar, correo_electronico)
+            .query('SELECT * FROM nino WHERE correo_electronico = @correo_electronico');
+
+        if (result.recordset.length > 0) {
+            const nino = result.recordset[0];
+            res.json({
+                id_discapacidad: nino.id_discapacidad,
+            });
+        } else {
+            res.status(404).send('NO se encontro el niño y su discapacidad');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al obtener niño');
+    }
 });
 
 app.post('/mejor-sesion', async (req, res) => {
@@ -308,6 +329,35 @@ app.post('/mejor-sesion', async (req, res) => {
         res.status(500).send('Error al obtener mejor sesión');
     }
 });
+
+app.post('/progreso-nino', async (req, res) => {
+    const { id_nino } = req.body;
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('id_nino', sql.Int, id_nino)
+            .query(`
+                SELECT niveles_de_progreso, fecha, puntos_totales 
+                FROM progreso 
+                WHERE id_nino = @id_nino
+            `);
+
+        if (result.recordset.length > 0) {
+            const progreso = result.recordset[0];
+            res.json({
+                niveles_de_progreso: progreso.niveles_de_progreso,
+                fecha: progreso.fecha,
+                puntos_totales: progreso.puntos_totales
+            });
+        } else {
+            res.status(404).send('No se encontró progreso para ese niño');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al obtener progreso');
+    }
+});
+
 
 
 //Juegos 
