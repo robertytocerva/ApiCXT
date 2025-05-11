@@ -316,6 +316,51 @@ app.post('/insertarSesion', async (req, res) => {
     }
 });
 
+app.post('/actualizarProgreso', async (req, res) => {
+    const { id_nino, niveles_de_progreso, puntos_totales } = req.body;
+
+    try {
+        const pool = await sql.connect(config);
+
+        // Verifica si ya existe un progreso para el niño
+        const check = await pool.request()
+            .input('id_nino', sql.Int, id_nino)
+            .query('SELECT * FROM progreso WHERE id_nino = @id_nino');
+
+        if (check.recordset.length > 0) {
+            // Ya existe, haz UPDATE sumando
+            await pool.request()
+                .input('id_nino', sql.Int, id_nino)
+                .input('niveles_de_progreso', sql.Int, niveles_de_progreso)
+                .input('puntos_totales', sql.Int, puntos_totales)
+                .query(`
+                    UPDATE progreso
+                    SET 
+                        niveles_de_progreso = niveles_de_progreso + @niveles_de_progreso,
+                        puntos_totales = puntos_totales + @puntos_totales,
+                        fecha = CAST(GETDATE() AS DATE)
+                    WHERE id_nino = @id_nino
+                `);
+            res.send('Progreso actualizado.');
+        } else {
+            // No existe, haz INSERT
+            await pool.request()
+                .input('id_nino', sql.Int, id_nino)
+                .input('niveles_de_progreso', sql.Int, niveles_de_progreso)
+                .input('puntos_totales', sql.Int, puntos_totales)
+                .query(`
+                    INSERT INTO progreso (id_nino, niveles_de_progreso, puntos_totales, fecha)
+                    VALUES (@id_nino, @niveles_de_progreso, @puntos_totales, CAST(GETDATE() AS DATE))
+                `);
+            res.send('Progreso insertado.');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al actualizar o insertar progreso');
+    }
+});
+
+
 // Iniciar el servidor en el puerto 3000
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
