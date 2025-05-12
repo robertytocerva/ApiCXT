@@ -358,6 +358,25 @@ app.post('/progreso-nino', async (req, res) => {
     }
 });
 
+app.post('/recomendaciones', async (req, res) => {
+    const { id_discapacidad } = req.body;
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('id_discapacidad', sql.Int, id_discapacidad)
+            .query(`
+                SELECT TOP 3 recomendacion, recomendacion_completa, autor, titulo
+                FROM recomendacion
+                WHERE id_discapacidad = @id_discapacidad
+                ORDER BY NEWID();
+            `);
+
+        res.json(result.recordset); // Devuelve un arreglo de 3 elementos
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al obtener recomendaciones');
+    }
+});
 
 
 //Juegos 
