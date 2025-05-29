@@ -9,7 +9,7 @@ app.use(express.json());
 const config = {
     user: 'sa',
     password: 'Robe2004',
-    server: 'ROBERTYTOCERVAL\\SQLEXPRESS',
+    server: 'ROBERTYTOCERVAL\\INSCXT',
     database: 'cxtDB',
     options: {
         trustServerCertificate: true ,// Change to true for local dev / self-signed certs
